@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Proveedores - Sistema de Gestión de Registro{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold text-warning mb-0">
+                        <i class="fas fa-truck me-2"></i>
+                        Gestión de Proveedores
+                    </h2>
+                    <p class="text-muted">Administra la información de tus proveedores</p>
+                </div>
+                <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#proveedorModal">
+                    <i class="fas fa-plus me-1"></i>Nuevo Proveedor
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Suppliers Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Lista de Proveedores ({{ proveedores|length }})
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if proveedores %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-warning">
+                                    <tr>
+                                        <th scope="col">ID</th>
+                                        <th scope="col">Nombre</th>
+                                        <th scope="col">Contacto</th>
+                                        <th scope="col" class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for proveedor in proveedores %}
+                                    <tr>
+                                        <td><span class="badge bg-secondary">{{ proveedor.id }}</span></td>
+                                        <td class="fw-medium">
+                                            <i class="fas fa-building me-2 text-warning"></i>
+                                            {{ proveedor.nombre }}
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-user me-1"></i>{{ proveedor.contacto }}
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-primary me-1" 
+                                                    onclick="editProveedor({{ proveedor.id }}, '{{ proveedor.nombre }}', '{{ proveedor.contacto }}')"
+                                                    data-bs-toggle="modal" data-bs-target="#editProveedorModal">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" 
+                                                    onclick="confirmDelete('proveedor', {{ proveedor.id }}, '{{ proveedor.nombre }}')"
+                                                    data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-truck fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No hay proveedores registrados</h5>
+                            <p class="text-muted mb-3">Comienza agregando tu primer proveedor</p>
+                            <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#proveedorModal">
+                                <i class="fas fa-plus me-1"></i>Agregar Proveedor
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Proveedor Modal -->
+<div class="modal fade" id="proveedorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-square me-2"></i>Nuevo Proveedor
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('crear_proveedor') }}" id="proveedorForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label">Nombre del Proveedor *</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" required maxlength="100"
+                               placeholder="Ej: Distribuidora ABC, Empresa XYZ...">
+                    </div>
+                    <div class="mb-3">
+                        <label for="contacto" class="form-label">Persona de Contacto *</label>
+                        <input type="text" class="form-control" id="contacto" name="contacto" required maxlength="100"
+                               placeholder="Nombre del representante o contacto principal">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save me-1"></i>Guardar Proveedor
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Proveedor Modal -->
+<div class="modal fade" id="editProveedorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>Editar Proveedor
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="editProveedorForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editNombre" class="form-label">Nombre del Proveedor *</label>
+                        <input type="text" class="form-control" id="editNombre" name="nombre" required maxlength="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editContacto" class="form-label">Persona de Contacto *</label>
+                        <input type="text" class="form-control" id="editContacto" name="contacto" required maxlength="100">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Actualizar Proveedor
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar este proveedor?</p>
+                <div class="alert alert-warning">
+                    <strong id="deleteItemName"></strong>
+                </div>
+                <p class="text-muted mb-0">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" id="deleteForm" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editProveedor(id, nombre, contacto) {
+    document.getElementById('editProveedorForm').action = `/proveedores/editar/${id}`;
+    document.getElementById('editNombre').value = nombre;
+    document.getElementById('editContacto').value = contacto;
+}
+
+function confirmDelete(type, id, name) {
+    document.getElementById('deleteForm').action = `/proveedores/eliminar/${id}`;
+    document.getElementById('deleteItemName').textContent = name;
+}
+</script>
+{% endblock %}
